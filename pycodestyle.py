@@ -917,7 +917,7 @@ def missing_whitespace_around_operator(logical_line, tokens):
                     # A needed trailing space was not found
                     pass
                     # yield prev_end, "E225 missing whitespace around operator"
-                elif prev_text != '**':
+                elif prev_text not in ('**', '&'):
                     code, optype = 'E226', 'arithmetic'
                     if prev_text == '%':
                         code, optype = 'E228', 'modulo'
