@@ -108,7 +108,7 @@ ARITHMETIC_OP = frozenset(['**', '*', '/', '//', '+', '-', '@'])
 WS_OPTIONAL_OPERATORS = ARITHMETIC_OP.union(['^', '&', '|', '<<', '>>', '%'])
 ASSIGNMENT_EXPRESSION_OP = [':='] if sys.version_info >= (3, 8) else []
 WS_NEEDED_OPERATORS = frozenset([
-    '**=', '*=', '/=', '//=', '+=', '-=', '!=', '<>', '<', '>',
+    '**=', '*=', '/=', '//=', '+=', '-=', '!=', '<>',
     '%=', '^=', '&=', '|=', '==', '<=', '>=', '<<=', '>>=', '=',
     'and', 'in', 'is', 'or', '->'] +
     ASSIGNMENT_EXPRESSION_OP)
@@ -869,6 +869,7 @@ def missing_whitespace_around_operator(logical_line, tokens):
     E228: msg = fmt%(errno, errmsg)
     """
     parens = 0
+    square_parens = 0
     need_space = False
     prev_type = tokenize.OP
     prev_text = prev_end = None
@@ -880,12 +881,17 @@ def missing_whitespace_around_operator(logical_line, tokens):
             parens += 1
         elif text == ')':
             parens -= 1
+        elif text == '[':
+            square_parens += 1
+        elif text == ']':
+            square_parens -= 1
         if need_space:
             if start != prev_end:
                 # Found a (probably) needed space
                 if need_space is not True and not need_space[1]:
-                    yield (need_space[0],
-                           "E225 missing whitespace around operator")
+                    pass
+                    # yield (need_space[0],
+                    #        "E225 missing whitespace around operator")
                 need_space = False
             elif text == '>' and prev_text in ('<', '-'):
                 # Tolerate the "<>" operator, even if running Python 3
@@ -909,7 +915,8 @@ def missing_whitespace_around_operator(logical_line, tokens):
             else:
                 if need_space is True or need_space[1]:
                     # A needed trailing space was not found
-                    yield prev_end, "E225 missing whitespace around operator"
+                    pass
+                    # yield prev_end, "E225 missing whitespace around operator"
                 elif prev_text != '**':
                     code, optype = 'E226', 'arithmetic'
                     if prev_text == '%':
@@ -920,7 +927,7 @@ def missing_whitespace_around_operator(logical_line, tokens):
                            "around %s operator" % (code, optype))
                 need_space = False
         elif token_type in operator_types and prev_end is not None:
-            if text == '=' and parens:
+            if text == '=' and (parens or square_parens):
                 # Allow keyword args or defaults: foo(bar=None).
                 pass
             elif text in WS_NEEDED_OPERATORS:
