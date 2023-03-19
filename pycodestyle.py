@@ -61,6 +61,9 @@ from fnmatch import fnmatch
 from functools import lru_cache
 from optparse import OptionParser
 
+def iskeyword(text):
+    return keyword.iskeyword(text) or text in ('cdef', 'cimport', 'cpdef')
+
 # this is a performance hack.  see https://bugs.python.org/issue43014
 if (
         sys.version_info < (3, 10) and
@@ -485,7 +488,7 @@ def missing_whitespace_after_keyword(logical_line, tokens):
         # appear e.g. as "if x is None:", and async/await, which were
         # valid identifier names in old Python versions.
         if (tok0.end == tok1.start and
-                keyword.iskeyword(tok0.string) and
+                iskeyword(tok0.string) and
                 tok1.string != '?' and
                 tok0.string not in SINGLETONS and
                 tok0.string not in ('async', 'await') and
@@ -802,7 +805,7 @@ def whitespace_before_parameters(logical_line, tokens):
             # Syntax "class A (B):" is allowed, but avoid it
             (index < 2 or tokens[index - 2][1] != 'class') and
             # Allow "return (a.foo for a in range(5))"
-            not keyword.iskeyword(prev_text) and
+            not iskeyword(prev_text) and
             # 'match' and 'case' are only soft keywords
             (
                 sys.version_info < (3, 9) or
@@ -918,7 +921,7 @@ def missing_whitespace_around_operator(logical_line, tokens):
                     # A needed trailing space was not found
                     pass
                     # yield prev_end, "E225 missing whitespace around operator"
-                elif prev_text not in ('**', '&'):
+                elif prev_text not in ('**', '&', '*'):
                     code, optype = 'E226', 'arithmetic'
                     if prev_text == '%':
                         code, optype = 'E228', 'modulo'
